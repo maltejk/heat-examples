@@ -49,14 +49,16 @@ resources:
       router: { get_resource: router }
       subnet: { get_resource: subnet }
 
-  allow_ssh:
+  allow_ssh_and_web:
     type: OS::Neutron::SecurityGroup
     properties:
-      description: allow incoming SSH and ICMP traffic from anywhere.
+      description: allow incoming SSH, HTTP, HTPS and ICMP traffic from anywhere.
       name: 
         list_join: [ '-', [ { get_param: "OS::stack_name" }, 'allow incoming traffic, tcp port 22 and icmp']]
       rules: 
         - { direction: ingress, remote_ip_prefix: 0.0.0.0/0, port_range_min: 22, port_range_max: 22, protocol: tcp } 
+        - { direction: ingress, remote_ip_prefix: 0.0.0.0/0, port_range_min: 80, port_range_max: 80, protocol: tcp }
+        - { direction: ingress, remote_ip_prefix: 0.0.0.0/0, port_range_min: 443, port_range_max: 443, protocol: tcp }
         - { direction: ingress, remote_ip_prefix: 0.0.0.0/0, protocol: icmp } 
 
   host:
@@ -67,7 +69,7 @@ resources:
         list_join: [ '-', [ { get_param: "OS::stack_name" }, 'example-server' ]]
       user_data_format: RAW
       user_data: { get_resource: cloud-init-config }    
-      image: Ubuntu 16.04 LTS sys11 optimized 2018.03.21 
+      image: Ubuntu 18.04 LTS - 2018-08-10 
       flavor: { get_param: flavor } 
       networks:
         - port: { get_resource: port }
@@ -88,10 +90,10 @@ resources:
 
   port:
     type: OS::Neutron::Port
-    depends_on: [ allow_ssh ]
+    depends_on: [ allow_ssh_and_web ]
     properties:
       network: { get_resource: net }
-      security_groups: [ get_resource: allow_ssh ]
+      security_groups: [ get_resource: allow_ssh_and_web ]
 
   floating_ip:
     type: OS::Neutron::FloatingIP
