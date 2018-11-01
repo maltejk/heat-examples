@@ -13,8 +13,7 @@ parameters:
     default: ext-net
   flavor:
     type: string
-  ssh_keys:
-    type: comma_delimited_list
+    default: m1.tiny
   KeyName:
     type: string
     default: my-key
