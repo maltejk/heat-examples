@@ -15,6 +15,13 @@ parameters:
     type: string
   ssh_keys:
     type: comma_delimited_list
+  KeyName:
+    type: string
+    default: my-key
+    description: Name of an existing key pair to use for the instance
+    constraints:
+      - custom_constraint: nova.keypair
+        description: Must name a public key (pair) known to Nova
 
 resources:
 
@@ -73,6 +80,7 @@ resources:
       flavor: { get_param: flavor } 
       networks:
         - port: { get_resource: port }
+      key_name: { get_param: KeyName }
 
   cloud-init-config:
    # cloud init resource
