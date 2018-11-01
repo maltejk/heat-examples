@@ -27,7 +27,7 @@ resources:
   net:
     type: OS::Neutron::Net
     properties: 
-      name: example-net
+      name: { get_param: "OS::stack_name" }
 
   subnet:
     type: OS::Neutron::Subnet
@@ -58,9 +58,9 @@ resources:
   allow_ssh_and_web:
     type: OS::Neutron::SecurityGroup
     properties:
-      description: allow incoming SSH, HTTP, HTPS and ICMP traffic from anywhere.
+      description: Alow incoming SSH, HTTP, HTTPS and ICMP traffic from anywhere.
       name: 
-        list_join: [ '-', [ { get_param: "OS::stack_name" }, 'allow incoming traffic, tcp port 22 and icmp']]
+        list_join: [ '-', [ { get_param: "OS::stack_name" }, 'allow SSH, HTTP(S), ICMP']]
       rules: 
         - { direction: ingress, remote_ip_prefix: 0.0.0.0/0, port_range_min: 22, port_range_max: 22, protocol: tcp } 
         - { direction: ingress, remote_ip_prefix: 0.0.0.0/0, port_range_min: 80, port_range_max: 80, protocol: tcp }
@@ -69,31 +69,15 @@ resources:
 
   host:
     type: OS::Nova::Server
-    depends_on: [ cloud-init-config, port ]
+    depends_on: [ port ]
     properties:
       name: 
-        list_join: [ '-', [ { get_param: "OS::stack_name" }, 'example-server' ]]
-      user_data_format: RAW
-      user_data: { get_resource: cloud-init-config }    
+        list_join: [ '-', [ { get_param: "OS::stack_name" }, 'server' ]]   
       image: Ubuntu 18.04 LTS - 2018-08-10 
       flavor: { get_param: flavor } 
       networks:
         - port: { get_resource: port }
       key_name: { get_param: KeyName }
-
-  cloud-init-config:
-   # cloud init resource
-   type: OS::Heat::CloudConfig
-   properties:
-    cloud_config:
-      manage_etc_hosts: true
-      users:
-        - name: syseleven
-          gecos: syseleven Stack user
-          sudo: ALL=(ALL) NOPASSWD:ALL
-          shell: /bin/bash
-          lock-passwd: false
-          ssh-authorized-keys: { get_param: ssh_keys }  
 
   port:
     type: OS::Neutron::Port
